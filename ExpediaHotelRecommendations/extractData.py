@@ -25,13 +25,13 @@ parser.add_argument('--encoding', default='utf-8')
 args = parser.parse_args()
 
 
-fname = 'data/train.csv'
+fname = 'data/train_sample.csv'
 
 
 
 ############################## SAMPLE DATA ###########################################################################
 
-#                   0          1               2                      3                     4                   5                          6            7          8 
+#                   0          1               2                      3                     4                   5                          6            7          8
 #           date_time, site_name, posa_continent, user_location_country, user_location_region, user_location_city, orig_destination_distance,     user_id, is_mobile,
 # 2014-08-11 07:46:59,         2,              3,                    66,                  348,              48862,                 2234.2641,          12,         0,
 #    201301 ~ 2014-12,    2 ~ 53,          0 ~ 4,               0 ~ 239,             0 ~ 1027,          0 ~ 56508,             0.0 ~ 12407.9, 1 ~ 1198785,       0~1,
@@ -53,7 +53,6 @@ fname = 'data/train.csv'
 data_min = [1e9 for x in range(24)]
 data_max = [0 for x in range(24)]
 data_min[0] = data_min[11] = data_min[12] = '9999-99-99'
-print(data_min)
 head = 1
 with open(fname) as f:
   for line in f.readlines():
@@ -86,7 +85,7 @@ for i, _ in enumerate(data_min):
 
 def date2week(date):
   y, m, d = date.split('-')
-  return datetime.date(int(y), int(m), int(d)).isocalendar()[1]
+  return [datetime.date(int(y), int(m), int(d)).isocalendar()[1]]
 
 def one_hot(data, len):
   d = np.zeros(len)
@@ -99,7 +98,7 @@ def one_hot_range(data, len, step):
   return d
 
 destFile = 'data/destinations.csv'
-infoDest = [[0.0 for j in range(149)] for i in range(64994)]
+infoDest = [[0.0 for j in range(149)] for i in range(65108)]
 head = 1
 with open(destFile) as f:
   for line in f.readlines():
@@ -122,6 +121,7 @@ def info_dest(idx):
 data = []
 label = []
 head = 1
+progressing = 0
 with open(fname) as f:
   for line in f.readlines():
     convData = []
@@ -142,37 +142,35 @@ with open(fname) as f:
     if inCompleteData == 1:
       continue
 
-    print('conv data length: ', len(convData))
-    convData.append(date2week(words[0].split(' ')[0]))    # date_time ( 2013-01-07 00:00:02 ~ 2014-12-31 23:59:59 )
-    convData.append(one_hot(int(words[1]), 54))       # site name      ( 2 ~ 53 )
-    convData.append(one_hot(int(words[2]), 5))        # posa continent ( 0 ~ 4 )
-    convData.append(one_hot(int(words[3]), 240))      # user_location_country ( 0 ~ 239 )
-    convData.append(one_hot(int(words[4]), 1028))     # user_location_region ( 0 ~ 1027 )
-    convData.append(one_hot(int(words[5]), 56509))    # user_location_city ( 0 ~ 56508 )
-    print('conv data length: ', len(convData))
-    convData.append(one_hot_range(float(words[6]), 1000, 12408.0/999))     # orig_destination_distance(0.0 ~ 12407.9)
-    #convData.append(one_hot(int(words[7]), 54))      # user_id ( 1 ~ 1198785 )
-    convData.append(one_hot(int(words[8]), 2))        # is_mobile ( 0 ~ 1 )
-    convData.append(one_hot(int(words[9]), 2))        # is_package ( 0 ~ 1 )
-    convData.append(one_hot(int(words[10]), 11))      # channel ( 0 ~ 10 )
-    convData.append(date2week(words[11]))             # srch_ci ( 2012-02-15 ~ 2558-03-15 )
-    print('conv data length: ', len(convData))
-    convData.append(date2week(words[12]))             # srch_co ( 2012-09-04 ~ 2558-03-16 )
-    convData.append(one_hot(int(words[13]), 10))      # srch_adults_cnt ( 0 ~ 9 )
-    convData.append(one_hot(int(words[14]), 10))      # srch_children_cnt ( 0 ~ 9 )
-    convData.append(one_hot(int(words[15]), 9))       # srch_rm_cnt ( 0 ~ 8 )
-    convData.append(one_hot(int(words[16]), 65108))   # srch_destination_id ( 0 ~ 65107 )
-    convData.append(info_dest(int(words[16])))        # srch_destination_id ( 0 ~ 65107 )
-    print('conv data length: ', len(convData))
-    convData.append(one_hot(int(words[17]), 10))      # srch_destination_type_id ( 0 ~ 9 )
-    convData.append(one_hot(int(words[18]), 2))       # is_booking ( 0 ~ 1 )
-    convData.append(one_hot(int(words[19]), 270))     # cnt ( 1 ~ 269 )
-    print('conv data length: ', len(convData))
-    convData.append(one_hot(int(words[20]), 7))       # hotel_continent ( 0 ~ 6 )
-    convData.append(one_hot(int(words[21]), 213))     # hotel_country ( 0 ~ 212 )
-    convData.append(one_hot(int(words[22]), 2118))    # hotel_market ( 0 ~ 2117 )
-    print('conv data length: ', len(convData))
+    convData.extend(date2week(words[0].split(' ')[0]))    # date_time ( 2013-01-07 00:00:02 ~ 2014-12-31 23:59:59 )
+    convData.extend(one_hot(int(words[1]), 54))       # site name      ( 2 ~ 53 )
+    convData.extend(one_hot(int(words[2]), 5))        # posa continent ( 0 ~ 4 )
+    convData.extend(one_hot(int(words[3]), 240))      # user_location_country ( 0 ~ 239 )
+    convData.extend(one_hot(int(words[4]), 1028))     # user_location_region ( 0 ~ 1027 )
+    convData.extend(one_hot(int(words[5]), 56509))    # user_location_city ( 0 ~ 56508 )
+    convData.extend(one_hot_range(float(words[6]), 1000, 12408.0/999))     # orig_destination_distance(0.0 ~ 12407.9)
+    #convData.extend(one_hot(int(words[7]), 54))      # user_id ( 1 ~ 1198785 )
+    convData.extend(one_hot(int(words[8]), 2))        # is_mobile ( 0 ~ 1 )
+    convData.extend(one_hot(int(words[9]), 2))        # is_package ( 0 ~ 1 )
+    convData.extend(one_hot(int(words[10]), 11))      # channel ( 0 ~ 10 )
+    convData.extend(date2week(words[11]))             # srch_ci ( 2012-02-15 ~ 2558-03-15 )
+    convData.extend(date2week(words[12]))             # srch_co ( 2012-09-04 ~ 2558-03-16 )
+    convData.extend(one_hot(int(words[13]), 10))      # srch_adults_cnt ( 0 ~ 9 )
+    convData.extend(one_hot(int(words[14]), 10))      # srch_children_cnt ( 0 ~ 9 )
+    convData.extend(one_hot(int(words[15]), 9))       # srch_rm_cnt ( 0 ~ 8 )
+    convData.extend(one_hot(int(words[16]), 65108))   # srch_destination_id ( 0 ~ 65107 )
+    convData.extend(info_dest(int(words[16])))        # srch_destination_id ( 0 ~ 65107 )
+    convData.extend(one_hot(int(words[17]), 10))      # srch_destination_type_id ( 0 ~ 9 )
+    convData.extend(one_hot(int(words[18]), 2))       # is_booking ( 0 ~ 1 )
+    convData.extend(one_hot(int(words[19]), 270))     # cnt ( 1 ~ 269 )
+    convData.extend(one_hot(int(words[20]), 7))       # hotel_continent ( 0 ~ 6 )
+    convData.extend(one_hot(int(words[21]), 213))     # hotel_country ( 0 ~ 212 )
+    convData.extend(one_hot(int(words[22]), 2118))    # hotel_market ( 0 ~ 2117 )
     data.append(convData)
-    print('data length: ', len(data))
     label.append(int(words[23]))
 
+    if len(data) == 30000:
+        progressing += 1
+        sys.stdout.write("\r%d%%" % progressing)
+        sys.stdout.flush()
+bar.finish()
