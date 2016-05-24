@@ -19,8 +19,8 @@ with open(srcFile) as sf:
   print('Loading file...')
   for line in sf.readlines():
     cnt += 1
-    #sys.stdout.write("\rProcessing.. %.2f%%" % (cnt * 100.0 / 37670294))
-    sys.stdout.write("\rProcessing.. %.2f%%" % (cnt * 100.0 / 100000))
+    sys.stdout.write("\rProcessing.. %.2f%%" % (cnt * 100.0 / 37670294))
+    #sys.stdout.write("\rProcessing.. %.2f%%" % (cnt * 100.0 / 100000))
     sys.stdout.flush()
     if head == 1:
       head = 0
